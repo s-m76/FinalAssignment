@@ -1,0 +1,35 @@
+from FA_File2 import FileHandler
+from FA_File1 import Ticket
+
+if __name__ == "__main__":
+    customer_handler = FileHandler("customers.pkl")
+    ticket_handler = FileHandler("tickets.pkl")
+
+    # Add customer
+    customer = {
+        "account_id": "cust123",
+        "password": "password123",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "phone": "1234567890",
+        "purchase_history": []
+    }
+    customer_handler.create(customer)
+
+    # Add tickets
+    ticket1 = Ticket(1, "Single-Day Pass", 275, "1 Day", ["Access to park"])
+    ticket2 = Ticket(2, "Two-Day Pass", 480, "2 Days", ["Access to park for 2 days"])
+    ticket_handler.create(ticket1.__dict__)
+    ticket_handler.create(ticket2.__dict__)
+
+    # View tickets
+    tickets = ticket_handler.read_all()
+    print("Tickets:", tickets)
+
+    # Modify ticket
+    ticket_handler.modify(lambda x: x["ticket_id"] == 1, lambda x: x.update({"price": 300}))
+    print("Updated Tickets:", ticket_handler.read_all())
+
+    # Delete ticket
+    ticket_handler.delete(lambda x: x["ticket_id"] == 2)
+    print("After Deletion:", ticket_handler.read_all())
