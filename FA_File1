@@ -1,0 +1,94 @@
+class Person:
+    def __init__(self, name, email, phone):
+        self.name = name
+        self.email = email
+        self.phone = phone
+
+    def update_details(self, name=None, email=None, phone=None):
+        if name:
+            self.name = name
+        if email:
+            self.email = email
+        if phone:
+            self.phone = phone
+
+class Customer(Person):
+    def __init__(self, name, email, phone, customer_id):
+        super().__init__(name, email, phone)
+        self.customer_id = customer_id
+        self.purchase_history = []
+
+    def view_purchase_history(self):
+        return self.purchase_history
+
+    def manage_account(self, **kwargs):
+        self.update_details(**kwargs)
+
+class Employee(Person):
+    def __init__(self, name, email, phone, employee_id, role):
+        super().__init__(name, email, phone)
+        self.employee_id = employee_id
+        self.role = role
+
+class Ticket:
+    def __init__(self, ticket_id, ticket_type, price, validity, features):
+        self.ticket_id = ticket_id
+        self.ticket_type = ticket_type
+        self.price = price
+        self.validity = validity
+        self.features = features
+
+    def display_info(self):
+        return {
+            "ticket_id": self.ticket_id,
+            "ticket_type": self.ticket_type,
+            "price": self.price,
+            "validity": self.validity,
+            "features": self.features,
+        }
+
+    def apply_discount(self, percentage):
+        self.price -= self.price * (percentage / 100)
+
+class CustomerAccount:
+    def __init__(self, account_id, password):
+        self.account_id = account_id
+        self.password = password
+        self.is_logged_in = False
+
+    def login(self, account_id, password):
+        if self.account_id == account_id and self.password == password:
+            self.is_logged_in = True
+            return True
+        return False
+
+    def logout(self):
+        self.is_logged_in = False
+
+    def create_account(self):
+        return {"account_id": self.account_id, "password": self.password}
+
+class Payment:
+    def __init__(self, payment_id, method, amount):
+        self.payment_id = payment_id
+        self.method = method
+        self.amount = amount
+
+    def process_payment(self):
+        return f"Processed payment of {self.amount} using {self.method}."
+
+class Discount:
+    def __init__(self, discount_id, percentage, conditions):
+        self.discount_id = discount_id
+        self.percentage = percentage
+        self.conditions = conditions
+
+    def apply_discount(self, price):
+        return price - (price * (self.percentage / 100))
+
+class Validity:
+    def __init__(self, validity_period):
+        self.validity_period = validity_period
+
+    def check_validity(self):
+        return f"Valid for {self.validity_period}."
