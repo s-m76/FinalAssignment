@@ -1,0 +1,154 @@
+import tkinter as tk
+from tkinter import messagebox
+from FA_File2 import FileHandler
+
+class LoginWindow:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Adventure Land - Login")
+
+        tk.Label(root, text="Login as:").grid(row=0, column=0, columnspan=2)
+
+        tk.Button(root, text="Admin", command=self.admin_login).grid(row=1, column=0)
+        tk.Button(root, text="Customer", command=self.customer_login).grid(row=1, column=1)
+
+    def admin_login(self):
+        self.open_login_window("Admin")
+
+    def customer_login(self):
+        self.open_login_window("Customer")
+
+    def open_login_window(self, user_type):
+        login_window = tk.Toplevel(self.root)
+        login_window.title(f"{user_type} Login")
+
+        tk.Label(login_window, text="Username:").grid(row=0, column=0)
+        username_entry = tk.Entry(login_window)
+        username_entry.grid(row=0, column=1)
+
+        tk.Label(login_window, text="Password:").grid(row=1, column=0)
+        password_entry = tk.Entry(login_window, show="*")
+        password_entry.grid(row=1, column=1)
+
+        def validate_login():
+            username = username_entry.get()
+            password = password_entry.get()
+            if user_type == "Admin" and username == "admin" and password == "admin123":
+                messagebox.showinfo("Success", "Admin Login Successful")
+                AdminDashboard(tk.Toplevel(self.root))
+            elif user_type == "Customer":
+                customer_handler = FileHandler("customers.pkl")
+                customers = customer_handler.read_all()
+                for customer in customers:
+                    if customer["account_id"] == username and customer["password"] == password:
+                        messagebox.showinfo("Success", "Customer Login Successful")
+                        CustomerDashboard(tk.Toplevel(self.root), username)
+                        return
+                messagebox.showerror("Error", "Invalid Customer Credentials")
+            else:
+                messagebox.showerror("Error", "Invalid Admin Credentials")
+
+        tk.Button(login_window, text="Login", command=validate_login).grid(row=2, column=0, columnspan=2)
+
+class AdminDashboard:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Admin Dashboard")
+
+        tk.Label(root, text="Admin Dashboard").pack()
+
+        tk.Button(root, text="View Ticket Sales", command=self.view_ticket_sales).pack()
+        tk.Button(root, text="Modify Discounts", command=self.modify_discounts).pack()
+
+    def view_ticket_sales(self):
+        ticket_handler = FileHandler("tickets.pkl")
+        tickets = ticket_handler.read_all()
+        sales_data = [f"Ticket ID: {t['ticket_id']}, Sold Price: {t['price']}" for t in tickets]
+        sales_message = "\n".join(sales_data)
+        messagebox.showinfo("Ticket Sales", sales_message if sales_message else "No tickets sold yet.")
+
+    def modify_discounts(self):
+        discount_window = tk.Toplevel(self.root)
+        discount_window.title("Modify Discounts")
+
+        tk.Label(discount_window, text="Enter Ticket ID:").grid(row=0, column=0)
+        ticket_id_entry = tk.Entry(discount_window)
+        ticket_id_entry.grid(row=0, column=1)
+
+        tk.Label(discount_window, text="New Discount (%):").grid(row=1, column=0)
+        discount_entry = tk.Entry(discount_window)
+        discount_entry.grid(row=1, column=1)
+
+        def apply_discount():
+            ticket_id = int(ticket_id_entry.get())
+            new_discount = float(discount_entry.get())
+            ticket_handler = FileHandler("tickets.pkl")
+
+            def update_discount(ticket):
+                ticket["price"] -= ticket["price"] * (new_discount / 100)
+
+            ticket_handler.modify(lambda x: x["ticket_id"] == ticket_id, update_discount)
+            messagebox.showinfo("Success", "Discount applied successfully!")
+
+        tk.Button(discount_window, text="Apply Discount", command=apply_discount).grid(row=2, column=0, columnspan=2)
+
+class CustomerDashboard:
+    def __init__(self, root, customer_id):
+        self.root = root
+        self.customer_id = customer_id
+        self.root.title("Customer Dashboard")
+
+        tk.Label(root, text=f"Welcome, {customer_id}").pack()
+
+        tk.Button(root, text="Purchase Tickets", command=self.purchase_tickets).pack()
+        tk.Button(root, text="View Purchase History", command=self.view_purchase_history).pack()
+
+    def purchase_tickets(self):
+        purchase_window = tk.Toplevel(self.root)
+        purchase_window.title("Purchase Tickets")
+
+        ticket_handler = FileHandler("tickets.pkl")
+        tickets = ticket_handler.read_all()
+        ticket_data = [f"ID: {t['ticket_id']} - {t['ticket_type']} - {t['price']} AED" for t in tickets]
+
+        tk.Label(purchase_window, text="Available Tickets:").pack()
+        tk.Label(purchase_window, text="\n".join(ticket_data)).pack()
+
+        tk.Label(purchase_window, text="Enter Ticket ID:").pack()
+        ticket_id_entry = tk.Entry(purchase_window)
+        ticket_id_entry.pack()
+
+        def confirm_purchase():
+            ticket_id = int(ticket_id_entry.get())
+            ticket = next((t for t in tickets if t["ticket_id"] == ticket_id), None)
+            if ticket:
+                customer_handler = FileHandler("customers.pkl")
+                customers = customer_handler.read_all()
+
+                def add_purchase(customer):
+                    if customer["account_id"] == self.customer_id:
+                        customer["purchase_history"].append(ticket)
+
+                customer_handler.modify(lambda x: x["account_id"] == self.customer_id, add_purchase)
+                messagebox.showinfo("Success", "Ticket purchased successfully!")
+            else:
+                messagebox.showerror("Error", "Invalid Ticket ID")
+
+        tk.Button(purchase_window, text="Purchase", command=confirm_purchase).pack()
+
+    def view_purchase_history(self):
+        customer_handler = FileHandler("customers.pkl")
+        customers = customer_handler.read_all()
+        customer = next((c for c in customers if c["account_id"] == self.customer_id), None)
+        if customer:
+            history = customer.get("purchase_history", [])
+            history_data = [f"Ticket ID: {t['ticket_id']}, Type: {t['ticket_type']}" for t in history]
+            history_message = "\n".join(history_data)
+            messagebox.showinfo("Purchase History", history_message if history_message else "No purchases found.")
+        else:
+            messagebox.showerror("Error", "Customer not found.")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = LoginWindow(root)
+    root.mainloop()
