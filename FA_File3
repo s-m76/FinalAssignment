@@ -1,154 +1,217 @@
+# File 3: GUI
+
+import os
 import tkinter as tk
 from tkinter import messagebox
 from FA_File2 import FileHandler
 
-class LoginWindow:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Adventure Land - Login")
+class GUI:
+    users = {
+        'admin': 'admin',
+        'cust1': 'pass1',
+        'cust2': 'pass2'
+    }
 
-        tk.Label(root, text="Login as:").grid(row=0, column=0, columnspan=2)
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Login Interface")
+        self.current_user = None  # Tracks the logged-in user
+        self.create_login_interface()
 
-        tk.Button(root, text="Admin", command=self.admin_login).grid(row=1, column=0)
-        tk.Button(root, text="Customer", command=self.customer_login).grid(row=1, column=1)
+    def create_login_interface(self):
+        self.clear_screen()
+        tk.Label(self.root, text="Login as:").pack()
+        tk.Button(self.root, text="Admin", command=self.admin_login_window).pack()
+        tk.Button(self.root, text="Customer", command=self.customer_login_window).pack()
 
-    def admin_login(self):
-        self.open_login_window("Admin")
+    def admin_login_window(self):
+        self.clear_screen()
+        tk.Label(self.root, text="Admin Login").pack()
+        tk.Label(self.root, text="Username:").pack()
+        username_entry = tk.Entry(self.root)
+        username_entry.pack()
+        tk.Label(self.root, text="Password:").pack()
+        password_entry = tk.Entry(self.root, show='*')
+        password_entry.pack()
 
-    def customer_login(self):
-        self.open_login_window("Customer")
-
-    def open_login_window(self, user_type):
-        login_window = tk.Toplevel(self.root)
-        login_window.title(f"{user_type} Login")
-
-        tk.Label(login_window, text="Username:").grid(row=0, column=0)
-        username_entry = tk.Entry(login_window)
-        username_entry.grid(row=0, column=1)
-
-        tk.Label(login_window, text="Password:").grid(row=1, column=0)
-        password_entry = tk.Entry(login_window, show="*")
-        password_entry.grid(row=1, column=1)
-
-        def validate_login():
+        def validate_admin_login():
             username = username_entry.get()
             password = password_entry.get()
-            if user_type == "Admin" and username == "admin" and password == "admin123":
-                messagebox.showinfo("Success", "Admin Login Successful")
-                AdminDashboard(tk.Toplevel(self.root))
-            elif user_type == "Customer":
-                customer_handler = FileHandler("customers.pkl")
-                customers = customer_handler.read_all()
-                for customer in customers:
-                    if customer["account_id"] == username and customer["password"] == password:
-                        messagebox.showinfo("Success", "Customer Login Successful")
-                        CustomerDashboard(tk.Toplevel(self.root), username)
-                        return
-                messagebox.showerror("Error", "Invalid Customer Credentials")
+            if username == 'admin' and password == 'admin':
+                self.admin_panel_window()
             else:
-                messagebox.showerror("Error", "Invalid Admin Credentials")
+                messagebox.showerror("Error", "Invalid admin credentials.")
 
-        tk.Button(login_window, text="Login", command=validate_login).grid(row=2, column=0, columnspan=2)
+        tk.Button(self.root, text="Login", command=validate_admin_login).pack()
+        tk.Button(self.root, text="Back", command=self.create_login_interface).pack()
 
-class AdminDashboard:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Admin Dashboard")
+    def customer_login_window(self):
+        self.clear_screen()
+        tk.Label(self.root, text="Customer Login").pack()
+        tk.Label(self.root, text="Username:").pack()
+        username_entry = tk.Entry(self.root)
+        username_entry.pack()
+        tk.Label(self.root, text="Password:").pack()
+        password_entry = tk.Entry(self.root, show='*')
+        password_entry.pack()
 
-        tk.Label(root, text="Admin Dashboard").pack()
+        def validate_customer_login():
+            username = username_entry.get()
+            password = password_entry.get()
+            if username in self.users and self.users.get(username) == password:
+                self.current_user = username
+                self.customer_panel_window()
+            else:
+                messagebox.showerror("Error", "Invalid customer credentials.")
 
-        tk.Button(root, text="View Ticket Sales", command=self.view_ticket_sales).pack()
-        tk.Button(root, text="Modify Discounts", command=self.modify_discounts).pack()
+        tk.Button(self.root, text="Login", command=validate_customer_login).pack()
+        tk.Button(self.root, text="Back", command=self.create_login_interface).pack()
 
-    def view_ticket_sales(self):
-        ticket_handler = FileHandler("tickets.pkl")
-        tickets = ticket_handler.read_all()
-        sales_data = [f"Ticket ID: {t['ticket_id']}, Sold Price: {t['price']}" for t in tickets]
-        sales_message = "\n".join(sales_data)
-        messagebox.showinfo("Ticket Sales", sales_message if sales_message else "No tickets sold yet.")
+    def admin_panel_window(self):
+        self.clear_screen()
+        tk.Label(self.root, text="Admin Panel").pack()
+        tk.Button(self.root, text="Create Customer Account", command=self.create_customer_account).pack()
+        tk.Button(self.root, text="Modify Customer Account", command=self.modify_customer_account).pack()
+        tk.Button(self.root, text="Delete Customer Account", command=self.delete_customer_account).pack()
+        tk.Button(self.root, text="Back", command=self.create_login_interface).pack()
 
-    def modify_discounts(self):
-        discount_window = tk.Toplevel(self.root)
-        discount_window.title("Modify Discounts")
+    def customer_panel_window(self):
+        self.clear_screen()
+        tk.Label(self.root, text="Customer Panel").pack()
+        tk.Button(self.root, text="View Purchases", command=self.view_purchases).pack()
+        tk.Button(self.root, text="Purchase Tickets", command=self.purchase_tickets).pack()
+        tk.Button(self.root, text="Back", command=self.create_login_interface).pack()
 
-        tk.Label(discount_window, text="Enter Ticket ID:").grid(row=0, column=0)
-        ticket_id_entry = tk.Entry(discount_window)
-        ticket_id_entry.grid(row=0, column=1)
+    def create_customer_account(self):
+        messagebox.showinfo("Info", "Customer account creation coming soon :)")
 
-        tk.Label(discount_window, text="New Discount (%):").grid(row=1, column=0)
-        discount_entry = tk.Entry(discount_window)
-        discount_entry.grid(row=1, column=1)
+    def modify_customer_account(self):
+        messagebox.showinfo("Info", "Customer account modification coming soon :)")
 
-        def apply_discount():
-            ticket_id = int(ticket_id_entry.get())
-            new_discount = float(discount_entry.get())
-            ticket_handler = FileHandler("tickets.pkl")
+    def delete_customer_account(self):
+        messagebox.showinfo("Info", "Customer account deletion coming soon :)")
 
-            def update_discount(ticket):
-                ticket["price"] -= ticket["price"] * (new_discount / 100)
+    def view_purchases(self):
+        self.clear_screen()
+        file_handler = FileHandler("purchases.pkl")  # Create an instance of FileHandler
+        purchases = file_handler.read_file() or {}  # Use the instance method
+        username = self.current_user  # Get the logged-in user's username
 
-            ticket_handler.modify(lambda x: x["ticket_id"] == ticket_id, update_discount)
-            messagebox.showinfo("Success", "Discount applied successfully!")
+        if username in purchases and purchases[username]:
+            tk.Label(self.root, text="Your Purchases").pack()
+            purchase_listbox = tk.Listbox(self.root, width=50, height=10)
+            purchase_listbox.pack()
+            for item in purchases[username]:
+                purchase_listbox.insert(tk.END, item)
 
-        tk.Button(discount_window, text="Apply Discount", command=apply_discount).grid(row=2, column=0, columnspan=2)
+            def remove_purchase():
+                selected = purchase_listbox.curselection()
+                if selected:
+                    item = purchase_listbox.get(selected)
+                    purchases[username].remove(item)
 
-class CustomerDashboard:
-    def __init__(self, root, customer_id):
-        self.root = root
-        self.customer_id = customer_id
-        self.root.title("Customer Dashboard")
+                    file_handler.update_file(purchases)  # Use the instance method
 
-        tk.Label(root, text=f"Welcome, {customer_id}").pack()
+                    purchase_listbox.delete(selected)
+                    messagebox.showinfo("Info", f"Removed: {item}")
+                else:
+                    messagebox.showerror("Error", "No item selected.")
 
-        tk.Button(root, text="Purchase Tickets", command=self.purchase_tickets).pack()
-        tk.Button(root, text="View Purchase History", command=self.view_purchase_history).pack()
+            tk.Button(self.root, text="Remove Selected", command=remove_purchase).pack()
+        else:
+            messagebox.showinfo("Purchases", "No purchases found.")
+        tk.Button(self.root, text="Back", command=self.customer_panel_window).pack()
 
     def purchase_tickets(self):
-        purchase_window = tk.Toplevel(self.root)
-        purchase_window.title("Purchase Tickets")
+        self.clear_screen()
+        tk.Label(self.root, text="Available Tickets").pack()
 
-        ticket_handler = FileHandler("tickets.pkl")
-        tickets = ticket_handler.read_all()
-        ticket_data = [f"ID: {t['ticket_id']} - {t['ticket_type']} - {t['price']} AED" for t in tickets]
+        tickets = [
+            {
+                "name": "Single Day Pass",
+                "price": 275,
+                "description": "Access for one day",
+                "validity": "1 day",
+                "discount": "None",
+                "limitations": "Valid only on selected date"
+            },
+            {
+                "name": "Two Day Pass",
+                "price": 480,
+                "description": "Access for two consecutive day",
+                "validity": "2 days",
+                "discount": "10% online",
+                "limitations": "Cannot be split over multiple trips"
+            },
+            {
+                "name": "Annual Membership",
+                "price": 1840,
+                "description": "Unlimited access for one year",
+                "validity": "1 year",
+                "discount": "15% renewal discount",
+                "limitations": "Must be used by same person"
+            },
+            {
+                "name": "Child Ticket",
+                "price": 185,
+                "description": "Discount for children ages 3-12",
+                "validity": "1 day",
+                "discount": "None",
+                "limitations": "Must be accompanied by an adult"
+            },
+            {
+                "name": "Group Ticket(10+)",
+                "price": 220,
+                "description": "Special Rate for groups of 10 or more",
+                "validity": "1 day",
+                "discount": "20% of for groups of 20 and more",
+                "limitations": "Must be booked in advance"
+            },
+            {
+                "name": "VIP Experience",
+                "price": 550,
+                "description": "Premium access and reserved seats",
+                "validity": "1 day",
+                "discount": "None",
+                "limitations": "Must be purchased in advance"
+            },
+        ]
+        selected_ticket = tk.StringVar(value=tickets[0]["name"])
 
-        tk.Label(purchase_window, text="Available Tickets:").pack()
-        tk.Label(purchase_window, text="\n".join(ticket_data)).pack()
-
-        tk.Label(purchase_window, text="Enter Ticket ID:").pack()
-        ticket_id_entry = tk.Entry(purchase_window)
-        ticket_id_entry.pack()
+        for ticket in tickets:
+            tk.Radiobutton(self.root, text=f"{ticket['name']} - ${ticket['price']}\n{ticket['description']}", variable=selected_ticket, value=ticket["name"]).pack()
 
         def confirm_purchase():
-            ticket_id = int(ticket_id_entry.get())
-            ticket = next((t for t in tickets if t["ticket_id"] == ticket_id), None)
-            if ticket:
-                customer_handler = FileHandler("customers.pkl")
-                customers = customer_handler.read_all()
+            ticket_name = selected_ticket.get()
+            ticket = next(t for t in tickets if t["name"] == ticket_name)
 
-                def add_purchase(customer):
-                    if customer["account_id"] == self.customer_id:
-                        customer["purchase_history"].append(ticket)
+            file_handler = FileHandler("purchases.pkl")  # Create an instance of FileHandler
+            purchases = file_handler.read_file() or {}  # Use the instance to call read_file
+            username = self.current_user  # Use the logged-in user's username
 
-                customer_handler.modify(lambda x: x["account_id"] == self.customer_id, add_purchase)
-                messagebox.showinfo("Success", "Ticket purchased successfully!")
+            if username not in purchases:
+                purchases[username] = []
+
+            purchases[username].append(f"{ticket['name']} - ${ticket['price']}")
+
+            if not os.path.exists("purchases.pkl"):
+                file_handler.create_file(purchases)  # Use the instance to create the file
             else:
-                messagebox.showerror("Error", "Invalid Ticket ID")
+                file_handler.update_file(purchases)  # Use the instance to update the file
 
-        tk.Button(purchase_window, text="Purchase", command=confirm_purchase).pack()
+            messagebox.showinfo("Success", f"You have purchased: {ticket['name']} for ${ticket['price']}")
+            self.customer_panel_window()
 
-    def view_purchase_history(self):
-        customer_handler = FileHandler("customers.pkl")
-        customers = customer_handler.read_all()
-        customer = next((c for c in customers if c["account_id"] == self.customer_id), None)
-        if customer:
-            history = customer.get("purchase_history", [])
-            history_data = [f"Ticket ID: {t['ticket_id']}, Type: {t['ticket_type']}" for t in history]
-            history_message = "\n".join(history_data)
-            messagebox.showinfo("Purchase History", history_message if history_message else "No purchases found.")
-        else:
-            messagebox.showerror("Error", "Customer not found.")
+        tk.Button(self.root, text="Confirm Purchase", command=confirm_purchase).pack()
+        tk.Button(self.root, text="Back", command=self.customer_panel_window).pack()
+
+    def clear_screen(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+    def run(self):
+        self.root.mainloop()
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = LoginWindow(root)
-    root.mainloop()
+    gui = GUI()
+    gui.run()
