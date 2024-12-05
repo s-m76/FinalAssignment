@@ -1,43 +1,36 @@
-import pickle
+# File 2: File Handler
+
 import os
+import pickle
 
 class FileHandler:
-    def __init__(self, filename):
-        self.filename = filename
-        if not os.path.exists(filename):
-            with open(filename, 'wb') as file:
-                pickle.dump([], file)
+    def __init__(self, file_name):
+        self.file_name = file_name
 
-    # Creates and stores a new object in the file.
-    def create(self, obj):
-        data = self.read_all()
-        data.append(obj)
-        self._write(data)
+    def create_file(self, content):
+        """Creates the file and writes the provided content."""
+        with open(self.file_name, 'wb') as file:
+            pickle.dump(content, file)
 
-    # Alias for the create method.
-    def add(self, obj):
-        self.create(obj)
+    def read_file(self):
+        """Reads the file and returns its content, or None if the file doesn't exist."""
+        if os.path.exists(self.file_name):
+            with open(self.file_name, 'rb') as file:
+                return pickle.load(file)
+        else:
+            return None
 
-    # Deletes objects matching the given condition.
-    def delete(self, condition):
-        data = self.read_all()
-        data = [item for item in data if not condition(item)]
-        self._write(data)
+    def update_file(self, content):
+        """Updates the file with the provided content. Raises an error if the file doesn't exist."""
+        if os.path.exists(self.file_name):
+            with open(self.file_name, 'wb') as file:
+                pickle.dump(content, file)
+        else:
+            raise FileNotFoundError(f"File {self.file_name} does not exist.")
 
-    # Modifies objects that meet the condition using the update function.
-    def modify(self, condition, update_function):
-        data = self.read_all()
-        for item in data:
-            if condition(item):
-                update_function(item)
-        self._write(data)
-
-    # Reads all objects from the file.
-    def read_all(self):
-        with open(self.filename, 'rb') as file:
-            return pickle.load(file)
-
-    # Writes all objects back to the file.
-    def _write(self, data):
-        with open(self.filename, 'wb') as file:
-            pickle.dump(data, file)
+    def delete_file(self):
+        """Deletes the file. Raises an error if the file doesn't exist."""
+        if os.path.exists(self.file_name):
+            os.remove(self.file_name)
+        else:
+            raise FileNotFoundError(f"File {self.file_name} does not exist.")
