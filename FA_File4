@@ -1,35 +1,94 @@
+# File 4: Testing
+
 from FA_File2 import FileHandler
-from FA_File1 import Ticket
+from FA_File1 import Ticket, Validity, Discount
+
+def test_file_handling():
+    # Test data
+    test_data = {
+        "tickets": [
+            {
+                "name": "Single Day Pass",
+                "price": 275,
+                "description": "Access for one day",
+                "validity": "1 day",
+                "discount": "None",
+                "limitations": "Valid only on selected date"
+            },
+            {
+                "name": "Two Day Pass",
+                "price": 480,
+                "description": "Access for two consecutive days",
+                "validity": "2 days",
+                "discount": "10% online",
+                "limitations": "Cannot be split over multiple trips"
+            },
+            {
+                "name": "Annual Membership",
+                "price": 1840,
+                "description": "Unlimited access for one year",
+                "validity": "1 year",
+                "discount": "15% renewal discount",
+                "limitations": "Must be used by the same person"
+            },
+            {
+                "name": "Child Ticket",
+                "price": 185,
+                "description": "Discount for children ages 3-12",
+                "validity": "1 day",
+                "discount": "None",
+                "limitations": "Must be accompanied by an adult"
+            },
+            {
+                "name": "Group Ticket (10+)",
+                "price": 220,
+                "description": "Special Rate for groups of 10 or more",
+                "validity": "1 day",
+                "discount": "20% off for groups of 20 and more",
+                "limitations": "Must be booked in advance"
+            },
+            {
+                "name": "VIP Experience",
+                "price": 550,
+                "description": "Premium access and reserved seats",
+                "validity": "1 day",
+                "discount": "None",
+                "limitations": "Must be purchased in advance"
+            },
+        ]
+    }
+
+    # Create an instance of FileHandler
+    file_handler = FileHandler("tickets.pkl")
+
+    # Test file creation
+    file_handler.create_file(test_data)
+    print("File created successfully.")
+
+    # Test file reading
+    content = file_handler.read_file()
+    print("File content after creation:", content)
+
+    # Test file update
+    new_ticket = {
+        "name": "Special Event Pass",
+        "price": 800,
+        "description": "Access to special events and backstage passes",
+        "validity": "Event duration",
+        "discount": "None",
+        "limitations": "Non-transferable, limited availability"
+    }
+    content["tickets"].append(new_ticket)
+    file_handler.update_file(content)
+    print("File updated successfully.")
+
+    # Verify update
+    updated_content = file_handler.read_file()
+    print("Updated file content:", updated_content)
+
+    # Test file deletion
+    file_handler.delete_file()
+    print("File deletion successful.")
 
 if __name__ == "__main__":
-    customer_handler = FileHandler("customers.pkl")
-    ticket_handler = FileHandler("tickets.pkl")
-
-    # Add customer
-    customer = {
-        "account_id": "cust123",
-        "password": "password123",
-        "name": "John Doe",
-        "email": "john@example.com",
-        "phone": "1234567890",
-        "purchase_history": []
-    }
-    customer_handler.create(customer)
-
-    # Add tickets
-    ticket1 = Ticket(1, "Single-Day Pass", 275, "1 Day", ["Access to park"])
-    ticket2 = Ticket(2, "Two-Day Pass", 480, "2 Days", ["Access to park for 2 days"])
-    ticket_handler.create(ticket1.__dict__)
-    ticket_handler.create(ticket2.__dict__)
-
-    # View tickets
-    tickets = ticket_handler.read_all()
-    print("Tickets:", tickets)
-
-    # Modify ticket
-    ticket_handler.modify(lambda x: x["ticket_id"] == 1, lambda x: x.update({"price": 300}))
-    print("Updated Tickets:", ticket_handler.read_all())
-
-    # Delete ticket
-    ticket_handler.delete(lambda x: x["ticket_id"] == 2)
-    print("After Deletion:", ticket_handler.read_all())
+    test_file_handling()
